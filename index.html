@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DELTA GREEN // COMBAT TRACKER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --bg:       #0f0f0d;
+  --surface:  #181815;
+  --surface2: #1f1f1b;
+  --surface3: #252520;
+  --border:   #2e2e28;
+  --border2:  #3a3a32;
+  --text:     #d8d0bc;
+  --text-dim: #8a8070;
+  --text-faint:#4a4840;
+  --green:    #2d4a1e;
+  --green-l:  #3d6129;
+  --green-t:  #8ec870;
+  --amber:    #f0cc44;
+  --amber-d:  #2e2008;
+  --amber-t:  #c4ae80;
+  --red:      #8b1a1a;
+  --red-l:    #c0392b;
+  --red-t:    #e88080;
+  --blue:     #1a3d5c;
+  --blue-l:   #2a5a80;
+  --blue-t:   #80c0e8;
+  --hp-color: #4a9a3a;
+  --wp-color: #3a7ab0;
+  --san-color:#8b5cf6;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== TOP BAR ===== */
+#topbar {
+  background: #000;
+  border-bottom: 1px solid var(--border2);
+  padding: 0 16px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.topbar-title {
+  font-family: 'Special Elite', serif;
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.topbar-sep { color: var(--text-faint); }
+#round-display {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--amber);
+  text-transform: uppercase;
+}
+#phase-display {
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 2px 8px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+.phase-attack  { color: var(--red-t);   border-color: var(--red);   background: rgba(139,26,26,0.15); }
+.phase-defense { color: var(--blue-t);  border-color: var(--blue-l); background: rgba(26,61,92,0.2); }
+.phase-setup   { color: var(--green-t); border-color: var(--green-l);background: rgba(45,74,30,0.2); }
+.phase-end     { color: var(--amber);   border-color: var(--amber-d); background: rgba(46,32,8,0.3); }
+
+.topbar-spacer { flex: 1; }
+.topbar-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 5px 12px;
+  border: 1px solid;
+  cursor: pointer;
+  text-transform: uppercase;
+  background: transparent;
+}
+.tb-danger { color: var(--red-t); border-color: var(--red); }
+.tb-danger:hover { background: rgba(139,26,26,0.3); }
+.tb-neutral { color: var(--text-dim); border-color: var(--border2); }
+.tb-neutral:hover { background: var(--surface2); }
+.tb-green { color: var(--green-t); border-color: var(--green-l); }
+.tb-green:hover { background: rgba(45,74,30,0.3); }
+
+/* ===== LAYOUT ===== */
+#app { display: flex; flex: 1; overflow: hidden; }
+
+/* ===== SETUP SCREEN ===== */
+#setup-screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.setup-header {
+  text-align: center;
+}
+.setup-header h1 {
+  font-family: 'Special Elite', serif;
+  font-size: 22px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.setup-header p {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+
+.setup-add-form {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 18px 20px;
+  width: 100%;
+  max-width: 700px;
+}
+.setup-add-form h3 {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+.form-field { display: flex; flex-direction: column; gap: 4px; }
+.form-field label {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--amber-t);
+}
+.form-input {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 6px 8px;
+  outline: none;
+  width: 100%;
+}
+.form-input:focus { border-color: var(--green-l); }
+.form-input-type {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 6px 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.setup-combatant-list {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.setup-combatant-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sc-name {
+  font-family: 'Special Elite', serif;
+  font-size: 14px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sc-type-badge {
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+.sc-pc   { color: var(--green-t); border-color: var(--green-l); }
+.sc-npc  { color: var(--red-t);   border-color: var(--red); }
+.sc-stat { font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+.sc-stat span { color: var(--text); font-size: 12px; }
+.sc-del {
+  font-size: 12px;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 0 4px;
+}
+.sc-del:hover { color: var(--red-t); }
+
+.setup-actions {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ===== COMBAT SCREEN ===== */
+#combat-screen {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+}
+.combat-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ===== SIDEBAR ===== */
+#sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-header {
+  background: #000;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.sidebar-header-title {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.sidebar-round {
+  font-family: 'Special Elite', serif;
+  font-size: 13px;
+  color: var(--amber);
+}
+#initiative-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ===== COMBATANT CARD ===== */
+.combatant-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  cursor: default;
+  transition: border-color 0.15s;
+  position: relative;
+}
+.combatant-card.active-combatant {
+  border-color: var(--green-l);
+  background: rgba(45,74,30,0.12);
+}
+.combatant-card.active-combatant::before {
+  content: '▶';
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 8px;
+  color: var(--green-t);
+  background: var(--green-l);
+  padding: 2px 2px;
+  line-height: 1;
+}
+.combatant-card.defending {
+  border-color: var(--blue-l);
+  background: rgba(26,61,92,0.15);
+}
+.cc-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.cc-name {
+  font-family: 'Special Elite', serif;
+  font-size: 13px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-dex {
+  font-size: 9px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.cc-type { font-size: 8px; padding: 1px 5px; border: 1px solid; }
+
+.cc-stats { display: flex; flex-direction: column; gap: 3px; }
+.stat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.stat-bar-label {
+  font-size: 8px;
+  letter-spacing: 1px;
+  width: 28px;
+  flex-shrink: 0;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.stat-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+.hp-fill  { background: var(--hp-color); }
+.wp-fill  { background: var(--wp-color); }
+.san-fill { background: var(--san-color); }
+.stat-bar-val {
+  font-size: 10px;
+  color: var(--text);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.stat-bar-controls {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.stat-adj {
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+.stat-adj:hover { background: var(--border); color: var(--text); }
+
+.cc-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 5px;
+}
+.status-badge {
+  font-size: 8px;
+  padding: 1px 5px;
+  border: 1px solid;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+.status-suppressed { color: var(--amber);   border-color: var(--amber-d); background: rgba(46,32,8,0.4); }
+.status-pinned     { color: var(--red-t);   border-color: var(--red); background: rgba(139,26,26,0.2); }
+.status-dead       { color: var(--text-faint); border-color: var(--text-faint); background: rgba(0,0,0,0.3); }
+.status-unconscious{ color: var(--blue-t);  border-color: var(--blue-l); background: rgba(26,61,92,0.2); }
+
+.cc-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.cc-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  padding: 3px 7px;
+  border: 1px solid;
+  cursor: pointer;
+  text-transform: uppercase;
+  flex: 1;
+  text-align: center;
+  background: transparent;
+}
+.cc-btn-attack  { color: var(--red-t);   border-color: var(--red);    }
+.cc-btn-attack:hover  { background: rgba(139,26,26,0.25); }
+.cc-btn-defend  { color: var(--blue-t);  border-color: var(--blue-l); }
+.cc-btn-defend:hover  { background: rgba(26,61,92,0.3); }
+.cc-btn-status  { color: var(--text-dim);border-color: var(--border2);}
+.cc-btn-status:hover  { background: var(--surface3); }
+
+/* ===== FLOW PANEL ===== */
+#flow-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface2);
+}
+.flow-header {
+  background: #000;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.flow-combatant-name {
+  font-family: 'Special Elite', serif;
+  font-size: 15px;
+  color: var(--text);
+}
+.flow-combatant-meta {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+.flow-spacer { flex: 1; }
+
+/* Breadcrumb */
+#breadcrumb {
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  min-height: 30px;
+  scrollbar-width: none;
+}
+#breadcrumb::-webkit-scrollbar { display: none; }
+.bc-item {
+  font-size: 9px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+.bc-item.bc-current { color: var(--text-dim); }
+.bc-sep { font-size: 9px; color: var(--text-faint); flex-shrink: 0; }
+
+/* Flow step card */
+#flow-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.flow-step-card {
+  width: 100%;
+  max-width: 620px;
+}
+
+.step-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  border: 1px solid;
+}
+.step-type-decision { color: var(--amber);   border-color: var(--amber-d); background: rgba(46,32,8,0.4); }
+.step-type-info     { color: var(--green-t); border-color: var(--green);   background: rgba(45,74,30,0.2); }
+.step-type-choice   { color: var(--blue-t);  border-color: var(--blue);    background: rgba(26,61,92,0.2); }
+.step-type-end      { color: var(--text-dim);border-color: var(--border2); background: rgba(0,0,0,0.3); }
+
+.step-title {
+  font-family: 'Special Elite', serif;
+  font-size: 24px;
+  color: var(--text);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+.step-text {
+  font-size: 13px;
+  color: var(--amber-t);
+  line-height: 1.7;
+  margin-bottom: 12px;
+  letter-spacing: 0.3px;
+}
+.step-note {
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  background: var(--surface);
+  border-left: 2px solid var(--border2);
+  padding: 8px 12px;
+  margin-bottom: 18px;
+  letter-spacing: 0.3px;
+}
+
+/* Flow buttons */
+.flow-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.flow-btn-row {
+  display: flex;
+  gap: 8px;
+}
+.flow-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 12px 20px;
+  border: 1px solid;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-align: center;
+  transition: all 0.12s;
+  flex: 1;
+}
+.flow-btn-yes {
+  background: rgba(45,74,30,0.25);
+  color: var(--green-t);
+  border-color: var(--green-l);
+}
+.flow-btn-yes:hover { background: rgba(45,74,30,0.5); }
+.flow-btn-no {
+  background: rgba(139,26,26,0.2);
+  color: var(--red-t);
+  border-color: var(--red);
+}
+.flow-btn-no:hover { background: rgba(139,26,26,0.4); }
+.flow-btn-neutral {
+  background: rgba(42,61,78,0.25);
+  color: var(--blue-t);
+  border-color: var(--blue-l);
+}
+.flow-btn-neutral:hover { background: rgba(42,61,78,0.5); }
+.flow-btn-continue {
+  background: rgba(45,74,30,0.2);
+  color: var(--green-t);
+  border-color: var(--green-l);
+  width: 100%;
+  max-width: 300px;
+  align-self: flex-start;
+}
+.flow-btn-continue:hover { background: rgba(45,74,30,0.4); }
+.flow-btn-end {
+  background: rgba(46,32,8,0.3);
+  color: var(--amber);
+  border-color: var(--amber-d);
+  width: 100%;
+  max-width: 300px;
+}
+.flow-btn-end:hover { background: rgba(46,32,8,0.6); }
+
+.flow-back-row {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+.flow-btn-back {
+  font-size: 10px;
+  padding: 7px 14px;
+  background: transparent;
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.flow-btn-back:hover { color: var(--text-dim); border-color: var(--border2); }
+
+/* Idle panel */
+.flow-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  opacity: 0.5;
+}
+.flow-idle-icon {
+  font-size: 40px;
+  opacity: 0.3;
+}
+.flow-idle-text {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Status toggle modal */
+#status-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+#status-modal.show { display: flex; }
+.status-modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 20px;
+  min-width: 260px;
+}
+.status-modal-box h3 {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.status-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+.status-toggle-btn:hover { background: var(--surface2); }
+.status-toggle-btn.active { color: var(--text); border-color: var(--border2); }
+.status-check { width: 12px; height: 12px; border: 1px solid var(--border2); display: inline-block; flex-shrink: 0; }
+.status-toggle-btn.active .status-check { background: var(--green-l); border-color: var(--green-t); }
+.status-modal-close {
+  margin-top: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  cursor: pointer;
+  text-transform: uppercase;
+  background: transparent;
+  width: 100%;
+}
+.status-modal-close:hover { background: var(--surface2); }
+
+/* Aftermatch screen */
+#aftermath-screen {
+  display: none;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  padding: 40px;
+}
+.aftermath-title {
+  font-family: 'Special Elite', serif;
+  font-size: 32px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--red-t);
+}
+.aftermath-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-align: center;
+  max-width: 400px;
+  line-height: 1.8;
+}
+
+/* Button styles shared */
+.btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 8px 18px;
+  border: 1px solid;
+  cursor: pointer;
+  text-transform: uppercase;
+  background: transparent;
+  transition: background 0.12s;
+}
+.btn-green  { color: var(--green-t); border-color: var(--green-l); }
+.btn-green:hover  { background: rgba(45,74,30,0.3); }
+.btn-amber  { color: var(--amber);   border-color: var(--amber-d); }
+.btn-amber:hover  { background: rgba(46,32,8,0.5); }
+.btn-red    { color: var(--red-t);   border-color: var(--red); }
+.btn-red:hover    { background: rgba(139,26,26,0.3); }
+.btn-neutral{ color: var(--text-dim);border-color: var(--border2); }
+.btn-neutral:hover{ background: var(--surface2); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <span class="topbar-title">Delta Green</span>
+  <span class="topbar-sep">//</span>
+  <span class="topbar-title">Combat Tracker</span>
+  <span class="topbar-sep">//</span>
+  <span id="round-display">Setup</span>
+  <span id="phase-display" class="phase-setup">Pre-Combat</span>
+  <span class="topbar-spacer"></span>
+  <button class="topbar-btn tb-neutral" id="btn-add-combatant" onclick="showSetup()" style="display:none">+ Add Combatant</button>
+  <button class="topbar-btn tb-green" id="btn-next-turn" onclick="nextTurn()" style="display:none">Next Turn ▶</button>
+  <button class="topbar-btn tb-danger" id="btn-end-combat" onclick="endCombat()" style="display:none">End Combat</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- ===== SETUP SCREEN ===== -->
+  <div id="setup-screen">
+    <div class="setup-header">
+      <h1>Combat Setup</h1>
+      <p>Add combatants, then begin combat. Initiative is sorted by DEX (highest first).</p>
+    </div>
+
+    <div class="setup-add-form">
+      <h3>Add Combatant</h3>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Name</label>
+          <input type="text" class="form-input" id="f-name" placeholder="Agent Doe / NPC Name" onkeydown="if(event.key==='Enter')addCombatant()">
+        </div>
+        <div class="form-field">
+          <label>Type</label>
+          <select class="form-input form-input-type" id="f-type">
+            <option value="pc">PC</option>
+            <option value="npc">NPC</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>DEX</label>
+          <input type="number" class="form-input" id="f-dex" min="1" max="25" value="10" placeholder="10">
+        </div>
+        <div class="form-field">
+          <label>HP</label>
+          <input type="number" class="form-input" id="f-hp" min="1" max="30" value="10" placeholder="10">
+        </div>
+        <div class="form-field">
+          <label>WP</label>
+          <input type="number" class="form-input" id="f-wp" min="1" max="20" value="10" placeholder="10">
+        </div>
+        <div class="form-field">
+          <label>SAN</label>
+          <input type="number" class="form-input" id="f-san" min="0" max="99" value="50" placeholder="50">
+        </div>
+        <div class="form-field">
+          <label>&nbsp;</label>
+          <button class="btn btn-green" onclick="addCombatant()">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-combatant-list" id="setup-list">
+      <div style="font-size:10px;color:var(--text-faint);text-align:center;padding:16px;letter-spacing:1px;">
+        No combatants added yet.
+      </div>
+    </div>
+
+    <div class="setup-actions">
+      <button class="btn btn-neutral" onclick="addPreset()">Load Sample Squad</button>
+      <button class="btn btn-green" id="btn-start-combat" onclick="startCombat()" style="opacity:0.4;pointer-events:none;">Begin Combat ▶</button>
+    </div>
+  </div>
+
+  <!-- ===== COMBAT SCREEN ===== -->
+  <div id="combat-screen" class="combat-layout">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-header-title">Initiative Order</span>
+        <span class="sidebar-round" id="sidebar-round">Round 1</span>
+      </div>
+      <div id="initiative-list"></div>
+    </div>
+
+    <!-- FLOW PANEL -->
+    <div id="flow-panel">
+      <div class="flow-header">
+        <div>
+          <div class="flow-combatant-name" id="flow-name">—</div>
+          <div class="flow-combatant-meta" id="flow-meta">Select a combatant to begin</div>
+        </div>
+        <span class="flow-spacer"></span>
+        <button class="topbar-btn tb-neutral" onclick="resetFlow()" id="btn-reset-flow" style="display:none">↺ Reset Flow</button>
+      </div>
+
+      <div id="breadcrumb"></div>
+
+      <div id="flow-content">
+        <div class="flow-idle">
+          <div class="flow-idle-icon">⬡</div>
+          <div class="flow-idle-text">Select a combatant's action<br>or defense button to begin</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- AFTERMATH SCREEN -->
+  <div id="aftermath-screen">
+    <div class="aftermath-title">The Aftermath</div>
+    <div class="aftermath-sub">
+      Combat is over. Address injuries, apply sanity loss for violence witnessed,
+      and determine the consequences of the operation.
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px;">
+      <button class="btn btn-neutral" onclick="showSetup()">New Combat</button>
+      <button class="btn btn-amber" onclick="returnToCombat()">Return to Tracker</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS MODAL -->
+<div id="status-modal">
+  <div class="status-modal-box">
+    <h3 id="status-modal-title">Combatant Status</h3>
+    <div id="status-modal-body"></div>
+    <button class="status-modal-close" onclick="closeStatusModal()">Close</button>
+  </div>
+</div>
+
+<script>
+// ===== FLOW DATA =====
+const FLOWS = {
+
+  // === ATTACK FLOW ===
+  b_action: {
+    type: 'choice', phase: 'attack',
+    title: 'B) Choose Action',
+    text: 'What action is the active combatant taking this turn?',
+    note: 'During combat: max advantage +40% | max disadvantage: no limit.',
+    options: [
+      { label: 'Attack', next: 'c_surprise', style: 'neutral' },
+      { label: 'Called Shot', next: 'c_surprise', style: 'neutral' },
+      { label: 'Disarm', next: 'c_surprise', style: 'neutral' },
+      { label: 'Pin', next: 'c_surprise', style: 'neutral' },
+      { label: 'Aim', next: 'aim', style: 'neutral' },
+      { label: 'Escape', next: 'escape', style: 'neutral' },
+      { label: 'Move / Wait / Other', next: 'end_turn', style: 'neutral' },
+    ]
+  },
+  aim: {
+    type: 'info', phase: 'attack',
+    title: 'Aim',
+    text: 'The combatant spends this turn aiming. They gain a bonus on their next attack roll.',
+    next: 'end_turn'
+  },
+  escape: {
+    type: 'info', phase: 'attack',
+    title: 'Escape',
+    text: 'The combatant attempts to escape a pin or grapple. Opposed roll applies.',
+    next: 'end_turn'
+  },
+  c_surprise: {
+    type: 'decision', phase: 'attack',
+    title: 'C) Surprise Attack?',
+    text: 'Is this a surprise attack — does the target not know combat has started?',
+    yes: 'c_helpless', no: 'd_modifiers'
+  },
+  c_helpless: {
+    type: 'decision', phase: 'attack',
+    title: 'Target Totally Helpless?',
+    text: 'Is the target bound, asleep, or completely unable to act?',
+    yes: 'c_murder', no: 'c_unaware'
+  },
+  c_murder: {
+    type: 'info', phase: 'attack',
+    title: 'No Roll Needed',
+    text: 'Target is totally helpless. No attack roll is required — the attack automatically succeeds.',
+    note: 'Skip to G) and calculate damage.',
+    next: 'g_damage'
+  },
+  c_unaware: {
+    type: 'decision', phase: 'attack',
+    title: 'Target Active but Unaware?',
+    text: 'Is the target conscious and active, but not aware that an attack is coming?',
+    yes: 'c_attack_bonus', no: 'd_modifiers'
+  },
+  c_attack_bonus: {
+    type: 'info', phase: 'attack',
+    title: '⚡ Surprise Bonus',
+    text: 'Attack roll is made at +20%. A success automatically counts as a critical hit.',
+    note: 'Apply the +20% before rolling.',
+    next: 'd_modifiers'
+  },
+  d_modifiers: {
+    type: 'info', phase: 'attack',
+    title: 'D) Apply Combat Modifiers',
+    text: 'Apply all relevant situational modifiers to the attack skill before rolling.',
+    note: 'Max advantage: +40% total | Disadvantage: no limit\nEach advantage or disadvantage = ±20%.',
+    next: 'e_attack_roll'
+  },
+  e_attack_roll: {
+    type: 'info', phase: 'attack',
+    title: 'E) Make the Attack Roll',
+    text: 'Roll percentile dice (d100) against the modified attack skill. Note the result.',
+    note: 'Critical = success on 1/5 of skill value or less\nFumble = 99 or 00 (unless skill ≥ 100)',
+    next: 'e_called_shot'
+  },
+  e_called_shot: {
+    type: 'decision', phase: 'attack',
+    title: 'Called Shot?',
+    text: 'Was this attack declared as a called shot (targeting a specific location or person)?',
+    yes: 'e_crowd', no: 'f_weapon'
+  },
+  e_crowd: {
+    type: 'decision', phase: 'attack',
+    title: 'Shooting Into a Crowd?',
+    text: 'Is the intended target surrounded by or in the middle of other people?',
+    yes: 'e_crowd_info', no: 'f_weapon'
+  },
+  e_crowd_info: {
+    type: 'info', phase: 'attack',
+    title: 'Crowd Fire',
+    text: 'Success: the called shot hits the intended target.\nFailure: a random member of the crowd is hit instead.',
+    next: 'f_weapon'
+  },
+  f_weapon: {
+    type: 'choice', phase: 'attack',
+    title: 'F) Weapon Type',
+    text: 'What kind of attack is being made?',
+    options: [
+      { label: 'F1) Melee / Hand-to-Hand', next: 'f1_melee', style: 'neutral' },
+      { label: 'F2) Ranged Weapon',        next: 'f2_ranged', style: 'neutral' },
+    ]
+  },
+  f1_melee: {
+    type: 'info', phase: 'attack',
+    title: 'F1) Melee / Hand-to-Hand',
+    text: 'Modify damage by the attacker\'s Strength bonus.',
+    note: 'STR 13–15: +1 | STR 16–17: +1D4 | STR 18: +1D6',
+    next: 'g_damage'
+  },
+  f2_ranged: {
+    type: 'info', phase: 'attack',
+    title: 'F2) Ranged Weapon',
+    text: 'Use the weapon\'s listed damage. No Strength modifier applies to ranged attacks.',
+    next: 'g_damage'
+  },
+  g_damage: {
+    type: 'info', phase: 'attack',
+    title: 'G) Calculate Total Damage',
+    text: 'Roll the weapon\'s damage dice. Add any applicable modifiers to get total damage.',
+    next: 'g_cover'
+  },
+  g_cover: {
+    type: 'decision', phase: 'attack',
+    title: 'Target Using Cover?',
+    text: 'Is the target behind cover that could absorb or reduce incoming damage?',
+    yes: 'g_cover_info', no: 'g_armor'
+  },
+  g_cover_info: {
+    type: 'info', phase: 'attack',
+    title: 'Cover',
+    text: 'Reduce the damage dealt to the target. Apply remaining damage to the cover\'s HP. When cover HP = 0, it is destroyed.',
+    next: 'g_armor'
+  },
+  g_armor: {
+    type: 'decision', phase: 'attack',
+    title: 'Target Using Armor?',
+    text: 'Is the target wearing body armor or using other protection?',
+    yes: 'g_armor_info', no: 'h_critical'
+  },
+  g_armor_info: {
+    type: 'info', phase: 'attack',
+    title: 'Armor',
+    text: 'Reduce damage by the armor\'s rating. Armor does NOT protect against Called Shots or successful Lethality rolls.',
+    next: 'h_critical'
+  },
+  h_critical: {
+    type: 'decision', phase: 'attack',
+    title: 'Attack Roll Was Critical?',
+    text: 'Did the attack roll result in a critical success (rolled under 1/5 of modified skill)?',
+    yes: 'h_lethality_crit', no: 'h_lethality_normal'
+  },
+  // --- Critical path ---
+  h_lethality_crit: {
+    type: 'decision', phase: 'attack',
+    title: 'Weapon Has Lethality? (Crit)',
+    text: 'Does this weapon have a Lethality rating?',
+    yes: 'h_lethality_crit_info', no: 'h_kill_radius_crit'
+  },
+  h_lethality_crit_info: {
+    type: 'info', phase: 'attack',
+    title: '💀 Critical + Lethality!',
+    text: 'Double the Lethality rating for this roll. If the Lethality roll still fails, deal double HP damage instead.',
+    next: 'h_apply'
+  },
+  h_kill_radius_crit: {
+    type: 'decision', phase: 'attack',
+    title: 'Weapon Has Kill Radius? (Crit)',
+    text: 'Does this weapon have a Kill Radius?',
+    yes: 'h_kill_radius_info', no: 'h_suppression_crit'
+  },
+  h_suppression_crit: {
+    type: 'decision', phase: 'attack',
+    title: 'Weapon Has Suppression? (Crit)',
+    text: 'Does this weapon have a Suppression effect?',
+    yes: 'h_suppress_aware', no: 'h_apply'
+  },
+  // --- Normal path ---
+  h_lethality_normal: {
+    type: 'decision', phase: 'attack',
+    title: 'Weapon Has Lethality?',
+    text: 'Does this weapon have a Lethality rating?',
+    yes: 'h_lethality_normal_info', no: 'h_kill_radius_normal'
+  },
+  h_lethality_normal_info: {
+    type: 'info', phase: 'attack',
+    title: 'Make the Lethality Roll',
+    text: 'Roll percentile dice against the Lethality rating.\nSuccess = instant kill (or equivalent effect).\nFailure = deal normal HP damage.',
+    next: 'h_apply'
+  },
+  h_kill_radius_normal: {
+    type: 'decision', phase: 'attack',
+    title: 'Weapon Has Kill Radius?',
+    text: 'Does this weapon have a Kill Radius?',
+    yes: 'h_kill_radius_info', no: 'h_suppression_normal'
+  },
+  h_suppression_normal: {
+    type: 'decision', phase: 'attack',
+    title: 'Weapon Has Suppression?',
+    text: 'Does this weapon have a Suppression effect?',
+    yes: 'h_suppress_aware', no: 'h_apply'
+  },
+  // --- Shared weapon effects ---
+  h_kill_radius_info: {
+    type: 'info', phase: 'attack',
+    title: 'Kill Radius Effect',
+    text: 'Apply the Kill Radius effect to all valid targets within range of the weapon\'s blast.',
+    next: 'h_apply'
+  },
+  h_suppress_aware: {
+    type: 'decision', phase: 'attack',
+    title: 'Target Aware of Danger?',
+    text: 'Does the target know they are being fired upon or threatened?',
+    yes: 'h_suppress_apply', no: 'h_no_suppress'
+  },
+  h_suppress_apply: {
+    type: 'info', phase: 'attack',
+    title: 'Apply Suppression',
+    text: 'The target is suppressed. They must pass a WP check or take the suppression penalty on their next action.',
+    next: 'h_apply'
+  },
+  h_no_suppress: {
+    type: 'info', phase: 'attack',
+    title: 'Cannot Be Suppressed',
+    text: 'The target is unaware of the threat and cannot be suppressed by this attack.',
+    next: 'h_apply'
+  },
+  h_apply: {
+    type: 'decision', phase: 'attack',
+    title: 'H) Apply Damage — Combat Over?',
+    text: 'Apply all damage and effects to the target now. Is combat resolved?',
+    yes: 'aftermath', no: 'end_turn',
+    yesLabel: 'Yes — Go to Aftermath', noLabel: 'No — Next Initiative'
+  },
+
+  // === DEFENSE FLOW ===
+  def_intro: {
+    type: 'info', phase: 'defense',
+    title: 'Defense',
+    text: 'Defense can be declared at any point in the initiative order. It counts as the combatant\'s full action for their turn.',
+    next: 'def_aware'
+  },
+  def_aware: {
+    type: 'decision', phase: 'defense',
+    title: '1) Aware of the Attack?',
+    text: 'Does the defending combatant know they are being attacked right now?',
+    yes: 'def_pinned', no: 'def_no_defend'
+  },
+  def_no_defend: {
+    type: 'info', phase: 'defense',
+    title: 'Cannot Defend',
+    text: 'The combatant is not aware of the attack. Defense is not possible. The attack proceeds uncontested.',
+    next: 'def_end'
+  },
+  def_pinned: {
+    type: 'decision', phase: 'defense',
+    title: '2) Pinned or Pinning?',
+    text: 'Is the combatant currently pinned by someone, or actively pinning another combatant?',
+    yes: 'def_no_defend', no: 'def_choose'
+  },
+  def_choose: {
+    type: 'choice', phase: 'defense',
+    title: '3) Choose Defense Type',
+    text: 'How does the combatant respond to the attack?',
+    options: [
+      { label: '3a) Fight Back', next: 'def_fight_choose', style: 'neutral' },
+      { label: '3b) Dodge',      next: 'def_dodge_range',  style: 'neutral' },
+    ]
+  },
+  // Fight back path
+  def_fight_choose: {
+    type: 'choice', phase: 'defense',
+    title: '4a) Fight Back — Choose Action',
+    text: 'Select the type of fighting-back action:',
+    options: [
+      { label: 'Attack',      next: 'def_fight_roll', style: 'neutral' },
+      { label: 'Called Shot', next: 'def_fight_roll', style: 'neutral' },
+      { label: 'Disarm',      next: 'def_fight_roll', style: 'neutral' },
+      { label: 'Pin',         next: 'def_fight_roll', style: 'neutral' },
+    ]
+  },
+  def_fight_roll: {
+    type: 'decision', phase: 'defense',
+    title: '5a) Opposed Attack Roll',
+    text: 'Make an opposed attack roll against the aggressor. Apply combat modifiers as in step D.',
+    yes: 'def_block', no: 'def_take_damage',
+    yesLabel: 'Success', noLabel: 'Failure'
+  },
+  def_block: {
+    type: 'info', phase: 'defense',
+    title: '6a) Blocked! Continue Attack',
+    text: 'Incoming damage is blocked. The defender may now continue with their own attack (F1 or F2) against the aggressor.',
+    next: 'def_end'
+  },
+  // Dodge path
+  def_dodge_range: {
+    type: 'decision', phase: 'defense',
+    title: '3b) In Melee Range?',
+    text: 'Is the attacker in melee range of the defending combatant?',
+    yes: 'def_dodge_melee_roll', no: 'def_ranged_cover'
+  },
+  def_dodge_melee_roll: {
+    type: 'decision', phase: 'defense',
+    title: 'Dodge — Opposed Roll (Melee)',
+    text: 'Make an opposed roll against the aggressor\'s attack roll.',
+    yes: 'def_dodged', no: 'def_take_damage',
+    yesLabel: 'Success — Dodged!', noLabel: 'Failure — Hit'
+  },
+  def_dodged: {
+    type: 'info', phase: 'defense',
+    title: '✓ Attack Dodged!',
+    text: 'The attack is dodged. The same roll result can be used to dodge any other melee attack against this combatant this turn.',
+    next: 'def_end'
+  },
+  def_ranged_cover: {
+    type: 'decision', phase: 'defense',
+    title: 'Nearby Coverage Available?',
+    text: 'Is there cover nearby that the combatant can use to reduce damage from this ranged attack?',
+    yes: 'def_cover_roll', no: 'def_take_damage'
+  },
+  def_cover_roll: {
+    type: 'decision', phase: 'defense',
+    title: 'Dodge — Opposed Roll (Cover)',
+    text: 'Make an opposed roll against the aggressor\'s attack roll.',
+    yes: 'def_damage_reduced', no: 'def_take_damage',
+    yesLabel: 'Success — Partial Cover', noLabel: 'Failure — Full Hit'
+  },
+  def_damage_reduced: {
+    type: 'info', phase: 'defense',
+    title: 'Damage Reduced by Cover',
+    text: 'Apply received damage and effects, reduced by the cover\'s protection rating.',
+    next: 'def_end'
+  },
+  def_take_damage: {
+    type: 'info', phase: 'defense',
+    title: 'Take Full Damage',
+    text: 'Apply received damage and/or effects in full. Update HP on the tracker.',
+    next: 'def_end'
+  },
+  def_end: {
+    type: 'end', phase: 'defense',
+    title: 'Defense Resolved',
+    text: 'The defensive action is complete. Return to the attack flow or continue the initiative order.',
+  },
+
+  // === END NODES ===
+  end_turn: {
+    type: 'end', phase: 'end',
+    title: 'Turn Complete',
+    text: 'This combatant\'s turn is over. Advance to the next combatant in initiative order (next highest DEX).',
+  },
+  aftermath: {
+    type: 'end', phase: 'end',
+    title: '⬡ The Aftermath',
+    text: 'Combat is over. Proceed to the aftermath phase — address injuries, sanity loss from violence, and the operational consequences.',
+  },
+};
+
+// ===== STATE =====
+let combatants = [];
+let round = 1;
+let activeIdx = 0;
+let flowHistory = [];    // stack of step IDs
+let currentFlow = null;  // 'attack' | 'defense'
+let flowCombatantIdx = null;
+let statusModalTarget = null;
+
+// ===== SETUP =====
+function addCombatant() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { document.getElementById('f-name').focus(); return; }
+  const type = document.getElementById('f-type').value;
+  const dex  = parseInt(document.getElementById('f-dex').value) || 10;
+  const hp   = parseInt(document.getElementById('f-hp').value)  || 10;
+  const wp   = parseInt(document.getElementById('f-wp').value)  || 10;
+  const san  = parseInt(document.getElementById('f-san').value) || 50;
+  combatants.push({ name, type, dex, hp, hpMax: hp, wp, wpMax: wp, san, statuses: [] });
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-name').focus();
+  renderSetupList();
+  updateStartBtn();
+}
+
+function removeCombatant(i) {
+  combatants.splice(i, 1);
+  renderSetupList();
+  updateStartBtn();
+}
+
+function renderSetupList() {
+  const list = document.getElementById('setup-list');
+  if (!combatants.length) {
+    list.innerHTML = '<div style="font-size:10px;color:var(--text-faint);text-align:center;padding:16px;letter-spacing:1px;">No combatants added yet.</div>';
+    return;
+  }
+  list.innerHTML = combatants.map((c, i) => `
+    <div class="setup-combatant-row">
+      <span class="sc-type-badge sc-${c.type}">${c.type.toUpperCase()}</span>
+      <span class="sc-name">${esc(c.name)}</span>
+      <span class="sc-stat">DEX <span>${c.dex}</span></span>
+      <span class="sc-stat">HP <span>${c.hp}</span></span>
+      <span class="sc-stat">WP <span>${c.wp}</span></span>
+      <span class="sc-stat">SAN <span>${c.san}</span></span>
+      <button class="sc-del" onclick="removeCombatant(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function updateStartBtn() {
+  const btn = document.getElementById('btn-start-combat');
+  if (combatants.length >= 1) {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  } else {
+    btn.style.opacity = '0.4';
+    btn.style.pointerEvents = 'none';
+  }
+}
+
+function addPreset() {
+  combatants = [
+    { name: 'Agent Rowe',     type: 'pc',  dex: 13, hp: 11, hpMax: 11, wp: 10, wpMax: 10, san: 58, statuses: [] },
+    { name: 'Agent Chen',     type: 'pc',  dex: 11, hp: 10, hpMax: 10, wp: 12, wpMax: 12, san: 62, statuses: [] },
+    { name: 'Cultist (1)',    type: 'npc', dex: 10, hp: 8,  hpMax: 8,  wp: 8,  wpMax: 8,  san: 20, statuses: [] },
+    { name: 'Cultist (2)',    type: 'npc', dex: 9,  hp: 8,  hpMax: 8,  wp: 8,  wpMax: 8,  san: 20, statuses: [] },
+    { name: 'Cult Leader',    type: 'npc', dex: 14, hp: 13, hpMax: 13, wp: 14, wpMax: 14, san: 10, statuses: [] },
+  ];
+  renderSetupList();
+  updateStartBtn();
+}
+
+function startCombat() {
+  if (!combatants.length) return;
+  // Sort by DEX descending
+  combatants.sort((a, b) => b.dex - a.dex);
+  activeIdx = 0;
+  round = 1;
+  flowHistory = [];
+  currentFlow = null;
+  flowCombatantIdx = null;
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('combat-screen').style.display = 'grid';
+  document.getElementById('btn-add-combatant').style.display = 'inline-block';
+  document.getElementById('btn-next-turn').style.display = 'inline-block';
+  document.getElementById('btn-end-combat').style.display = 'inline-block';
+
+  updateRoundDisplay();
+  renderInitiativeList();
+  showIdleFlow();
+}
+
+function showSetup() {
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('combat-screen').style.display = 'none';
+  document.getElementById('aftermath-screen').style.display = 'none';
+  document.getElementById('btn-add-combatant').style.display = 'none';
+  document.getElementById('btn-next-turn').style.display = 'none';
+  document.getElementById('btn-end-combat').style.display = 'none';
+  document.getElementById('round-display').textContent = 'Setup';
+  document.getElementById('phase-display').textContent = 'Pre-Combat';
+  document.getElementById('phase-display').className = 'phase-setup';
+  combatants = [];
+  renderSetupList();
+  updateStartBtn();
+}
+
+// ===== INITIATIVE =====
+function renderInitiativeList() {
+  const list = document.getElementById('initiative-list');
+  list.innerHTML = combatants.map((c, i) => {
+    const isActive = i === activeIdx;
+    const hpPct = Math.max(0, Math.round((c.hp / c.hpMax) * 100));
+    const wpPct = Math.max(0, Math.round((c.wp / c.wpMax) * 100));
+    const sanPct = Math.max(0, Math.min(100, c.san));
+    const statuses = (c.statuses || []).map(s =>
+      `<span class="status-badge status-${s}" title="Click to manage">${s}</span>`
+    ).join('');
+    return `
+      <div class="combatant-card ${isActive ? 'active-combatant' : ''}" id="cc-${i}">
+        <div class="cc-header">
+          <span class="cc-type sc-${c.type}">${c.type.toUpperCase()}</span>
+          <span class="cc-name">${esc(c.name)}</span>
+          <span class="cc-dex">DEX ${c.dex}</span>
+        </div>
+        <div class="cc-stats">
+          <div class="stat-bar-row">
+            <span class="stat-bar-label">HP</span>
+            <div class="stat-bar-track"><div class="stat-bar-fill hp-fill" style="width:${hpPct}%"></div></div>
+            <span class="stat-bar-val">${c.hp}/${c.hpMax}</span>
+            <div class="stat-bar-controls">
+              <button class="stat-adj" onclick="adjStat(${i},'hp',-1)" title="-1 HP">−</button>
+              <button class="stat-adj" onclick="adjStat(${i},'hp',1)"  title="+1 HP">+</button>
+            </div>
+          </div>
+          <div class="stat-bar-row">
+            <span class="stat-bar-label">WP</span>
+            <div class="stat-bar-track"><div class="stat-bar-fill wp-fill" style="width:${wpPct}%"></div></div>
+            <span class="stat-bar-val">${c.wp}/${c.wpMax}</span>
+            <div class="stat-bar-controls">
+              <button class="stat-adj" onclick="adjStat(${i},'wp',-1)" title="-1 WP">−</button>
+              <button class="stat-adj" onclick="adjStat(${i},'wp',1)"  title="+1 WP">+</button>
+            </div>
+          </div>
+          <div class="stat-bar-row">
+            <span class="stat-bar-label">SAN</span>
+            <div class="stat-bar-track"><div class="stat-bar-fill san-fill" style="width:${sanPct}%"></div></div>
+            <span class="stat-bar-val">${c.san}</span>
+            <div class="stat-bar-controls">
+              <button class="stat-adj" onclick="adjStat(${i},'san',-1)" title="-1 SAN">−</button>
+              <button class="stat-adj" onclick="adjStat(${i},'san',1)"  title="+1 SAN">+</button>
+            </div>
+          </div>
+        </div>
+        ${statuses ? `<div class="cc-statuses">${statuses}</div>` : ''}
+        <div class="cc-actions">
+          <button class="cc-btn cc-btn-attack" onclick="beginAttackFlow(${i})">⚔ Attack</button>
+          <button class="cc-btn cc-btn-defend" onclick="beginDefenseFlow(${i})">🛡 Defend</button>
+          <button class="cc-btn cc-btn-status" onclick="openStatusModal(${i})">⊕ Status</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function adjStat(i, stat, delta) {
+  const c = combatants[i];
+  if (stat === 'hp') {
+    c.hp = Math.max(0, Math.min(c.hpMax, c.hp + delta));
+    if (c.hp === 0 && !c.statuses.includes('dead')) {
+      // Optionally auto-flag
+    }
+  } else if (stat === 'wp') {
+    c.wp = Math.max(0, Math.min(c.wpMax, c.wp + delta));
+  } else if (stat === 'san') {
+    c.san = Math.max(0, Math.min(99, c.san + delta));
+  }
+  renderInitiativeList();
+}
+
+function nextTurn() {
+  activeIdx = (activeIdx + 1) % combatants.length;
+  if (activeIdx === 0) round++;
+  updateRoundDisplay();
+  renderInitiativeList();
+  showIdleFlow();
+  // Scroll active card into view
+  setTimeout(() => {
+    const el = document.getElementById(`cc-${activeIdx}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
+}
+
+function updateRoundDisplay() {
+  document.getElementById('round-display').textContent = `Round ${round}`;
+  document.getElementById('sidebar-round').textContent = `Round ${round}`;
+}
+
+// ===== FLOW ENGINE =====
+function beginAttackFlow(i) {
+  flowCombatantIdx = i;
+  currentFlow = 'attack';
+  flowHistory = ['b_action'];
+  renderFlow();
+}
+
+function beginDefenseFlow(i) {
+  flowCombatantIdx = i;
+  currentFlow = 'defense';
+  flowHistory = ['def_intro'];
+  renderFlow();
+}
+
+function flowNext(stepId) {
+  flowHistory.push(stepId);
+  renderFlow();
+}
+
+function flowBack() {
+  if (flowHistory.length > 1) {
+    flowHistory.pop();
+    renderFlow();
+  }
+}
+
+function resetFlow() {
+  flowHistory = [];
+  currentFlow = null;
+  flowCombatantIdx = null;
+  showIdleFlow();
+}
+
+function showIdleFlow() {
+  const content = document.getElementById('flow-content');
+  content.innerHTML = `
+    <div class="flow-idle">
+      <div class="flow-idle-icon">⬡</div>
+      <div class="flow-idle-text">Use ⚔ Attack or 🛡 Defend on a combatant<br>to begin the flow guide</div>
+    </div>`;
+  document.getElementById('flow-name').textContent = '—';
+  document.getElementById('flow-meta').textContent = 'Waiting for action';
+  document.getElementById('breadcrumb').innerHTML = '';
+  document.getElementById('btn-reset-flow').style.display = 'none';
+  document.getElementById('phase-display').textContent = 'Idle';
+  document.getElementById('phase-display').className = 'phase-setup';
+}
+
+function renderFlow() {
+  if (!flowHistory.length) { showIdleFlow(); return; }
+  const stepId = flowHistory[flowHistory.length - 1];
+  const step = FLOWS[stepId];
+  if (!step) { showIdleFlow(); return; }
+
+  const c = combatants[flowCombatantIdx];
+  document.getElementById('flow-name').textContent = c ? c.name : '—';
+  document.getElementById('flow-meta').textContent =
+    c ? `${c.type.toUpperCase()} · DEX ${c.dex} · HP ${c.hp}/${c.hpMax} · WP ${c.wp}/${c.wpMax} · SAN ${c.san}` : '';
+  document.getElementById('btn-reset-flow').style.display = 'inline-block';
+
+  // Phase indicator
+  const phaseEl = document.getElementById('phase-display');
+  phaseEl.textContent = step.phase.charAt(0).toUpperCase() + step.phase.slice(1);
+  phaseEl.className = `phase-${step.phase === 'end' ? 'end' : step.phase}`;
+
+  // Breadcrumb
+  renderBreadcrumb();
+
+  // Step card
+  const typeLabels = { decision: '◇ Decision', info: '□ Info', choice: '▣ Choose', end: '⬡ End' };
+  const typeClass   = { decision: 'step-type-decision', info: 'step-type-info', choice: 'step-type-choice', end: 'step-type-end' };
+
+  let buttonsHTML = '';
+  if (step.type === 'decision') {
+    const yLbl = step.yesLabel || 'Yes';
+    const nLbl = step.noLabel  || 'No';
+    buttonsHTML = `
+      <div class="flow-btn-row">
+        <button class="flow-btn flow-btn-yes"     onclick="flowNext('${step.yes}')">${yLbl}</button>
+        <button class="flow-btn flow-btn-no"      onclick="flowNext('${step.no}')">${nLbl}</button>
+      </div>`;
+  } else if (step.type === 'choice') {
+    buttonsHTML = step.options.map(opt =>
+      `<button class="flow-btn flow-btn-neutral" onclick="flowNext('${opt.next}')">${opt.label}</button>`
+    ).join('');
+  } else if (step.type === 'info') {
+    buttonsHTML = `<button class="flow-btn flow-btn-continue" onclick="flowNext('${step.next}')">Continue →</button>`;
+  } else if (step.type === 'end') {
+    const isAftermath = stepId === 'aftermath';
+    buttonsHTML = `
+      <button class="flow-btn flow-btn-end" onclick="${isAftermath ? 'showAftermath()' : 'handleEndTurn()'}">
+        ${isAftermath ? '→ Go to Aftermath' : '→ Next in Initiative Order'}
+      </button>`;
+  }
+
+  const noteHTML = step.note
+    ? `<div class="step-note">${step.note.replace(/\n/g,'<br>')}</div>`
+    : '';
+
+  document.getElementById('flow-content').innerHTML = `
+    <div class="flow-step-card">
+      <div class="step-type-badge ${typeClass[step.type]}">${typeLabels[step.type]}</div>
+      <div class="step-title">${step.title}</div>
+      <div class="step-text">${step.text.replace(/\n/g,'<br>')}</div>
+      ${noteHTML}
+      <div class="flow-buttons">${buttonsHTML}</div>
+      ${flowHistory.length > 1 ? `
+        <div class="flow-back-row">
+          <button class="flow-btn-back" onclick="flowBack()">← Back</button>
+          <button class="flow-btn-back" onclick="resetFlow()">✕ Cancel</button>
+        </div>` : ''}
+    </div>`;
+}
+
+function renderBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  const MAX = 5;
+  const hist = flowHistory.slice(-MAX);
+  bc.innerHTML = hist.map((id, i) => {
+    const step = FLOWS[id];
+    const isLast = i === hist.length - 1;
+    return `
+      <span class="bc-item ${isLast ? 'bc-current' : ''}">${step ? step.title : id}</span>
+      ${!isLast ? '<span class="bc-sep">›</span>' : ''}
+    `;
+  }).join('');
+  bc.scrollLeft = bc.scrollWidth;
+}
+
+function handleEndTurn() {
+  nextTurn();
+}
+
+function endCombat() {
+  if (!confirm('End combat and go to the Aftermath?')) return;
+  showAftermath();
+}
+
+function showAftermath() {
+  document.getElementById('combat-screen').style.display = 'none';
+  document.getElementById('aftermath-screen').style.display = 'flex';
+  document.getElementById('phase-display').textContent = 'Aftermath';
+  document.getElementById('phase-display').className = 'phase-end';
+  document.getElementById('round-display').textContent = `Round ${round} — Over`;
+}
+
+function returnToCombat() {
+  document.getElementById('combat-screen').style.display = 'grid';
+  document.getElementById('aftermath-screen').style.display = 'none';
+  updateRoundDisplay();
+  renderInitiativeList();
+  showIdleFlow();
+}
+
+// ===== STATUS MODAL =====
+const ALL_STATUSES = [
+  { id: 'suppressed',   label: 'Suppressed' },
+  { id: 'pinned',       label: 'Pinned' },
+  { id: 'unconscious',  label: 'Unconscious' },
+  { id: 'dead',         label: 'Dead / Dying' },
+];
+
+function openStatusModal(i) {
+  statusModalTarget = i;
+  const c = combatants[i];
+  document.getElementById('status-modal-title').textContent = c.name + ' — Status';
+  document.getElementById('status-modal-body').innerHTML = ALL_STATUSES.map(s => {
+    const active = c.statuses.includes(s.id);
+    return `
+      <button class="status-toggle-btn ${active ? 'active' : ''}" onclick="toggleStatus(${i}, '${s.id}')">
+        <span class="status-check"></span>
+        ${s.label}
+      </button>`;
+  }).join('');
+  document.getElementById('status-modal').classList.add('show');
+}
+
+function toggleStatus(i, statusId) {
+  const c = combatants[i];
+  const idx = c.statuses.indexOf(statusId);
+  if (idx >= 0) c.statuses.splice(idx, 1);
+  else c.statuses.push(statusId);
+  openStatusModal(i); // re-render modal
+  renderInitiativeList();
+}
+
+function closeStatusModal() {
+  document.getElementById('status-modal').classList.remove('show');
+  statusModalTarget = null;
+}
+
+// ===== UTILS =====
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  renderSetupList();
+  // Close status modal on backdrop click
+  document.getElementById('status-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('status-modal')) closeStatusModal();
+  });
+});
+</script>
+</body>
+</html>
