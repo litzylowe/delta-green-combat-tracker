@@ -754,6 +754,19 @@ body {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--surface); }
 ::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* Footer */
+#site-footer {
+  background: #000;
+  border-top: 1px solid var(--border2);
+  padding: 12px 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.5px;
+  line-height: 1.8;
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -1656,5 +1669,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+
+<footer id="site-footer">
+  Fan-made resource for personal home game use only — not an official Delta Green product.<br>
+  Delta Green is a trademark of the Delta Green Partnership. Not affiliated with, licensed by, or endorsed by Arc Dream Publishing or the Delta Green Partnership.
+</footer>
 </body>
 </html>
